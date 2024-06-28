@@ -13,9 +13,21 @@ function renderProductCards(products) {
   products.forEach((product) => {
     const col = document.createElement("div");
     col.className = "col-md-4";
+    col.onclick;
 
     const card = document.createElement("div");
     card.className = "card product-card";
+    // Menambahkan efek hover menggunakan event listener
+    card.addEventListener("mouseenter", function () {
+      this.style.transform = "scale(1.05)";
+      this.style.transition = "transform 0.2s ease";
+      this.style.cursor = "pointer";
+    });
+
+    card.addEventListener("mouseleave", function () {
+      this.style.transform = "scale(1)";
+      this.style.transition = "transform 0.2s ease";
+    });
 
     const cardBody = document.createElement("div");
     cardBody.className = "card-body";
