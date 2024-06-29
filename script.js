@@ -272,35 +272,173 @@ function showSuccessModal() {
   $("#successModal").modal("show");
 }
 
-async function addNewProduct() {
-  const product = document.querySelector("#product").value;
-  const productcode = document.querySelector("#productcode").value;
-  const barcode = document.querySelector("#barcode").value;
-  const purchase_price = document.querySelector("#purchase_price").value;
-  const price = document.querySelector("#price").value;
-  const discount = document.querySelector("#discount").value;
-  const stock = document.querySelector("#stock").value;
-  const file = document.querySelector("#file").files[0];
+const addDataBtn = document
+  .querySelector("#addDataProduct")
+  .addEventListener("click", function () {
+    Swal.fire({
+      title: "Masukkan informasi Anda",
+      html: `
+      <style>
+        #add-product-form {
+          text-align: left;
+        }
+        #add-product-form .form-group {
+          margin-bottom: 15px;
+        }
+        #add-product-form label {
+          display: block;
+          margin-bottom: 5px;
+        }
+        #add-product-form input {
+          width: 100%;
+          padding: 8px;
+          box-sizing: border-box;
+        }
+      </style>
+      <form id="add-product-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="product">Product Name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="product"
+            name="product"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="productcode">Product Code</label>
+          <input
+            type="text"
+            class="form-control"
+            id="productcode"
+            name="productcode"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="barcode">Barcode</label>
+          <input
+            type="text"
+            class="form-control"
+            id="barcode"
+            name="barcode"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="purchase_price">Purchase Price</label>
+          <input
+            type="number"
+            class="form-control"
+            id="purchase_price"
+            name="purchase_price"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="price">Price</label>
+          <input
+            type="number"
+            class="form-control"
+            id="price"
+            name="price"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="discount">Discount</label>
+          <input
+            type="number"
+            class="form-control"
+            id="discount"
+            name="discount"
+            value="0"
+          />
+        </div>
+        <div class="form-group">
+          <label for="stock">Stock</label>
+          <input
+            type="number"
+            class="form-control"
+            id="stock"
+            name="stock"
+            value="0"
+          />
+        </div>
+        <div class="form-group">
+          <label for="file">File (Optional)</label>
+          <input
+            type="file"
+            class="form-control-file"
+            id="file"
+            name="file"
+          />
+        </div>
+      </form>
+    `,
+      showCancelButton: true,
+      confirmButtonText: "Submit",
+      preConfirm: () => {
+        const form = Swal.getPopup().querySelector("#add-product-form");
+        const product = form.product.value;
+        const productcode = form.productcode.value;
+        const barcode = form.barcode.value;
+        const purchase_price = form.purchase_price.value;
+        const price = form.price.value;
+        const discount = form.discount.value;
+        const stock = form.stock.value;
+        const file = form.file.files[0];
+
+        if (!product || !productcode || !barcode || !purchase_price || !price) {
+          Swal.showValidationMessage("Tolong isi semua field yang diperlukan.");
+          return false;
+        }
+        return {
+          product,
+          productcode,
+          barcode,
+          purchase_price,
+          price,
+          discount,
+          stock,
+          file,
+        };
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const formData = result.value;
+        // Proses data form di sini
+        addNewProduct(formData);
+      }
+    });
+  });
+
+async function addNewProduct(formData) {
+  const {
+    product,
+    productcode,
+    barcode,
+    purchase_price,
+    price,
+    discount,
+    stock,
+    file,
+  } = formData;
 
   try {
-    // Tampilkan modal loading
-    showLoadingModal();
-
-    // Tunggu 4 detik untuk simulasi loading
-    await new Promise((resolve) => setTimeout(resolve, 8000));
-
     // Ambil jumlah data produk untuk menentukan ID produk baru
     const dataCount = await fetchProductCount();
     const newProductId = dataCount + 1;
 
     const newProduct = {
       id: newProductId,
-      owner_id: 49,
+      owner_id: 49, // Ganti dengan owner_id yang sesuai
       product,
       productcode,
       barcode,
-      category_id: 1,
-      unit_id: 1,
+      category_id: 1, // Ganti dengan category_id yang sesuai
+      unit_id: 1, // Ganti dengan unit_id yang sesuai
       purchase_price: parseFloat(purchase_price),
       price: parseFloat(price),
       discount: parseFloat(discount),
@@ -321,22 +459,47 @@ async function addNewProduct() {
       throw new Error("Failed to add new product");
     }
 
-    showLoadingModal();
-    // Refresh daftar produk setelah penambahan berhasil
-    setTimeout(() => {
-      location.reload();
-    }, 8000);
+    // Tampilkan modal loading (jika diperlukan)
+    // showLoadingModal();
 
-    fetchProducts();
+    let timerInterval;
+    Swal.fire({
+      icon: "info",
+      title: "Add New Product",
+      html: "Processing..",
+      timer: 8000,
+      timerProgressBar: true,
+      didOpen: () => {
+        Swal.showLoading();
+        const timer = Swal.getPopup().querySelector("b");
+        timerInterval = setInterval(() => {
+          timer.textContent = `${Swal.getTimerLeft()}`;
+        }, 100);
+      },
+      willClose: () => {
+        clearInterval(timerInterval);
+      },
+    }).then((result) => {
+      /* Read more about handling dismissals below */
+      if (result.dismiss === Swal.DismissReason.timer) {
+        Swal.fire({
+          title: "Success!",
+          text: "New file has been Added.",
+          icon: "success",
+        }).then(
+          setInterval(() => {
+            location.reload();
+          }, 3000)
+        );
+      }
+    });
 
-    // Menutup modal dan menampilkan modal sukses
-    $("#addProductModal").modal("hide");
-    showSuccessModal();
-
-    // Kosongkan form setelah submit
-    // document.getElementById("add-product-form").reset();
+    // Kosongkan form setelah submit (jika diperlukan)
+    document.getElementById("add-product-form").reset();
   } catch (error) {
     console.error("Error adding new product:", error);
+    // Tampilkan pesan error kepada pengguna (jika diperlukan)
+    Swal.fire("Error", "Gagal menambahkan produk. Silakan coba lagi.", "error");
   }
 }
 
@@ -344,48 +507,128 @@ $("#successModal").on("hidden.bs.modal", function () {
   handleSuccessModalHidden();
 });
 
-let currentProduct = null;
+let currentProduct = null; // Inisialisasi currentProduct dengan null
 
+// Fungsi untuk menampilkan modal update
 function showUpdateModal(product) {
-  currentProduct = product;
-  $("#update-product").val(product.product);
-  $("#update-productcode").val(product.productcode);
-  $("#update-barcode").val(product.barcode);
-  $("#update-purchase_price").val(product.purchase_price);
-  $("#update-price").val(product.price);
-  $("#update-discount").val(product.discount);
-  $("#update-stock").val(product.stock);
-  $("#updateModal").modal("show");
-}
+  currentProduct = product; // Mengatur currentProduct dengan nilai produk yang ingin diupdate
 
-async function updateProduct() {
-  if (!currentProduct) return;
+  Swal.fire({
+    title: "Update Product",
+    html: `
+      <style>
+        #update-product-form {
+          text-align: left;
+        }
+        #update-product-form .form-group {
+          margin-bottom: 15px;
+        }
+        #update-product-form label {
+          display: block;
+          margin-bottom: 5px;
+        }
+        #update-product-form input {
+          width: 100%;
+          padding: 8px;
+          box-sizing: border-box;
+        }
+      </style>
+      <form id="update-product-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="update-product">Product Name</label>
+          <input
+            type="text"
+            class="form-control"
+            id="update-product"
+            name="update-product"
+            value="${product.product}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="update-productcode">Product Code</label>
+          <input
+            type="text"
+            class="form-control"
+            id="update-productcode"
+            name="update-productcode"
+            value="${product.productcode}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="update-barcode">Barcode</label>
+          <input
+            type="text"
+            class="form-control"
+            id="update-barcode"
+            name="update-barcode"
+            value="${product.barcode}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="update-purchase_price">Purchase Price</label>
+          <input
+            type="number"
+            class="form-control"
+            id="update-purchase_price"
+            name="update-purchase_price"
+            value="${product.purchase_price}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="update-price">Price</label>
+          <input
+            type="number"
+            class="form-control"
+            id="update-price"
+            name="update-price"
+            value="${product.price}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="update-discount">Discount</label>
+          <input
+            type="number"
+            class="form-control"
+            id="update-discount"
+            name="update-discount"
+            value="${product.discount}"
+          />
+        </div>
+        <div class="form-group">
+          <label for="update-stock">Stock</label>
+          <input
+            type="number"
+            class="form-control"
+            id="update-stock"
+            name="update-stock"
+            value="${product.stock}"
+          />
+        </div>
+      </form>
+    `,
+    showCancelButton: true,
+    confirmButtonText: "Update",
+    preConfirm: () => {
+      const form = Swal.getPopup().querySelector("#update-product-form");
+      const product = form["update-product"].value;
+      const productcode = form["update-productcode"].value;
+      const barcode = form["update-barcode"].value;
+      const purchase_price = form["update-purchase_price"].value;
+      const price = form["update-price"].value;
+      const discount = form["update-discount"].value;
+      const stock = form["update-stock"].value;
 
-  const updateUrl = `https://newapi.katib.id/data/product/${currentProduct.product_id}`;
+      if (!product || !productcode || !purchase_price || !price) {
+        Swal.showValidationMessage("Please fill in all required fields.");
+        return false;
+      }
 
-  // Retrieve updated data from form fields
-  const product = document.querySelector("#update-product").value;
-  const productcode = document.querySelector("#update-productcode").value;
-  const barcode = document.querySelector("#update-barcode").value;
-  const purchase_price = document.querySelector("#update-purchase_price").value;
-  const price = document.querySelector("#update-price").value;
-  const discount = document.querySelector("#update-discount").value;
-  const stock = document.querySelector("#update-stock").value;
-
-  try {
-    // Tampilkan modal loading
-    showLoadingModal();
-
-    // Tunggu 4 detik untuk simulasi loading
-    await new Promise((resolve) => setTimeout(resolve, 6000));
-
-    const response = await fetch(updateUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-      body: JSON.stringify({
+      return {
         product,
         productcode,
         barcode,
@@ -393,46 +636,102 @@ async function updateProduct() {
         price,
         discount,
         stock,
-      }),
+      };
+    },
+  }).then((result) => {
+    if (result.isConfirmed) {
+      const formData = result.value;
+      updateProduct(formData); // Panggil fungsi updateProduct dengan formData yang diperoleh
+    }
+  });
+}
+async function updateProduct(formData) {
+  try {
+    if (!currentProduct || !currentProduct.product_id) {
+      throw new Error("Product data is invalid");
+    }
+
+    // Tampilkan modal loading (jika diperlukan)
+    // showLoadingModal();
+
+    // URL untuk update produk (ganti dengan URL dan method PUT yang sesuai)
+    const updateUrl = `https://newapi.katib.id/data/product/${currentProduct.product_id}`;
+
+    // Mengirim permintaan update ke server
+    const response = await fetch(updateUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
+      body: JSON.stringify(formData), // Menggunakan formData yang telah diambil dari form
     });
 
+    // Memeriksa apakah permintaan berhasil
     if (!response.ok) {
       throw new Error("Failed to update product");
     }
 
-    // Refresh product list after successful update
-    setTimeout(() => {
-      location.reload();
-    }, 6000);
+    let timerInterval;
+    Swal.fire({
+      icon: "info",
+      title: "Update Product",
+      html: "Processing..",
+      timer: 8000,
+      timerProgressBar: true,
+      didOpen: () => {
+        Swal.showLoading();
+        const timer = Swal.getPopup().querySelector("b");
+        timerInterval = setInterval(() => {
+          timer.textContent = `${Swal.getTimerLeft()}`;
+        }, 100);
+      },
+      willClose: () => {
+        clearInterval(timerInterval);
+      },
+    }).then((result) => {
+      /* Read more about handling dismissals below */
+      if (result.dismiss === Swal.DismissReason.timer) {
+        Swal.fire({
+          title: "Success!",
+          text: "file has been updated.",
+          icon: "success",
+        }).then(
+          setInterval(() => {
+            location.reload();
+          }, 3000)
+        );
+      }
+    });
 
+    // Fetch ulang produk setelah update berhasil
     fetchProducts();
 
-    // Close modal and show success modal
+    // Menutup modal update (jika diperlukan)
     $("#updateModal").modal("hide");
-    showSuccessModal();
   } catch (error) {
     console.error("Error updating product:", error);
+    // Menampilkan pesan error kepada pengguna (jika diperlukan)
+    Swal.fire("Error", "Failed to update product. Please try again.", "error");
   }
 }
 
 // Fungsi untuk menampilkan modal delete
 function showDeleteModal(productId) {
   // Mengatur pesan konfirmasi penghapusan
-  var deleteMessage = "Are you sure you want to delete this product?";
-  document.getElementById("deleteModalBody").textContent = deleteMessage;
-
-  // Menangani klik tombol Delete
-  $("#confirmDeleteBtn")
-    .off("click")
-    .on("click", function () {
-      // Panggil fungsi untuk menghapus produk
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!",
+  }).then((result) => {
+    if (result.isConfirmed) {
       deleteProduct(productId);
-      // Sembunyikan modal setelah menghapus
-      $("#deleteModal").modal("hide");
-    });
-
-  // Tampilkan modal delete
-  $("#deleteModal").modal("show");
+    }
+  });
 }
 
 function showSuccessModalDelete() {
@@ -444,10 +743,10 @@ async function deleteProduct(productId) {
 
   try {
     // Tampilkan modal loading
-    showLoadingModal();
+    // showLoadingModal();
 
     // Tunggu 4 detik untuk simulasi loading
-    await new Promise((resolve) => setTimeout(resolve, 8000));
+    // await new Promise((resolve) => setTimeout(resolve, 8000));
 
     const response = await fetch(deleteUrl, {
       method: "PUT",
@@ -462,15 +761,46 @@ async function deleteProduct(productId) {
       throw new Error("Failed to delete product");
     }
 
+    let timerInterval;
+    Swal.fire({
+      icon: "error",
+      title: "Deleting Product Data",
+      html: "Processing..",
+      timer: 8000,
+      timerProgressBar: true,
+      didOpen: () => {
+        Swal.showLoading();
+        const timer = Swal.getPopup().querySelector("b");
+        timerInterval = setInterval(() => {
+          timer.textContent = `${Swal.getTimerLeft()}`;
+        }, 100);
+      },
+      willClose: () => {
+        clearInterval(timerInterval);
+      },
+    }).then((result) => {
+      /* Read more about handling dismissals below */
+      if (result.dismiss === Swal.DismissReason.timer) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success",
+        }).then(
+          setInterval(() => {
+            location.reload();
+          }, 3000)
+        );
+      }
+    });
+
     // Panggil modal keberhasilan
-    showSuccessModalDelete();
+    // showSuccessModalDelete();
 
     // Sembunyikan modal loading setelah penghapusan berhasil
-    hideLoadingModal();
+    // hideLoadingModal();
 
-    setTimeout(() => {
-      location.reload();
-    }, 8000);
+    // setTimeout(() => {
+    // }, 8000);
 
     // Refresh daftar produk setelah penghapusan berhasil
     fetchProducts();
