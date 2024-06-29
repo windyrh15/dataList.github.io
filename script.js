@@ -21,7 +21,6 @@ function renderProductCards(products) {
     card.addEventListener("mouseenter", function () {
       this.style.transform = "scale(1.05)";
       this.style.transition = "transform 0.2s ease";
-      this.style.cursor = "pointer";
     });
 
     card.addEventListener("mouseleave", function () {
