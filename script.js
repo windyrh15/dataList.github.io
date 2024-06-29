@@ -52,6 +52,10 @@ function renderProductCards(products) {
     barcode.className = "card-text";
     barcode.textContent = `Barcode: ${product.barcode}`;
 
+    const p_price = document.createElement("p");
+    p_price.className = "card-text";
+    p_price.textContent = `Purchase Price: ${product.purchase_price}`;
+
     const price = document.createElement("p");
     price.className = "card-text";
     price.textContent = `Price: ${product.price}`;
@@ -59,6 +63,10 @@ function renderProductCards(products) {
     const stock = document.createElement("p");
     stock.className = "card-text";
     stock.textContent = `Stock: ${product.stock}`;
+
+    const diskon = document.createElement("p");
+    diskon.className = "card-text";
+    diskon.textContent = `Diskon: ${product.discount}%`;
 
     // Tombol Update
     const updateButton = document.createElement("button");
@@ -76,8 +84,10 @@ function renderProductCards(products) {
     cardBody.appendChild(title);
     cardBody.appendChild(productCode);
     cardBody.appendChild(barcode);
+    cardBody.appendChild(p_price);
     cardBody.appendChild(price);
     cardBody.appendChild(stock);
+    cardBody.appendChild(diskon);
     cardBody.appendChild(updateButton);
     cardBody.appendChild(deleteButton);
 
