@@ -199,6 +199,7 @@ function hideLoadingModal() {
 }
 
 let filteredProducts = []; // Menyimpan produk yang sudah difilter
+const maxProductsToShow = 9; // Jumlah maksimum produk yang ingin ditampilkan
 
 async function searchProducts() {
   const searchTerm = document
@@ -217,10 +218,15 @@ async function searchProducts() {
     }
     const data = await response.json();
 
-    // Filter produk berdasarkan nama produk
-    filteredProducts = data.products.filter((product) =>
-      product.product.toLowerCase().includes(searchTerm)
-    );
+    // Filter produk berdasarkan nama produk jika searchTerm tidak kosong
+    if (searchTerm !== "") {
+      filteredProducts = data.products.filter((product) =>
+        product.product.toLowerCase().includes(searchTerm)
+      );
+    } else {
+      // Jika searchTerm kosong, ambil sejumlah produk maksimum untuk ditampilkan
+      filteredProducts = data.products.slice(0, maxProductsToShow);
+    }
 
     renderProductCards(filteredProducts);
     renderPagination();
