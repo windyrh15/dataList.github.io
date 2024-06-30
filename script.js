@@ -218,11 +218,18 @@ async function searchProducts() {
     }
     const data = await response.json();
 
-    // Filter produk berdasarkan nama produk jika searchTerm tidak kosong
+    // Filter produk berdasarkan nama produk, productcode, discount, stock, price, atau purchase_price jika searchTerm tidak kosong
     if (searchTerm !== "") {
-      filteredProducts = data.products.filter((product) =>
-        product.product.toLowerCase().includes(searchTerm)
-      );
+      filteredProducts = data.products.filter((product) => {
+        return (
+          product.product.toLowerCase().includes(searchTerm) ||
+          product.productcode.toLowerCase().includes(searchTerm) ||
+          product.discount.toString().includes(searchTerm) ||
+          product.stock.toString().includes(searchTerm) ||
+          product.price.toString().includes(searchTerm) ||
+          product.purchase_price.toString().includes(searchTerm)
+        );
+      });
     } else {
       // Jika searchTerm kosong, ambil sejumlah produk maksimum untuk ditampilkan
       filteredProducts = data.products.slice(0, maxProductsToShow);
