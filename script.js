@@ -190,14 +190,6 @@ function renderPagination() {
   pagination.appendChild(nextLi);
 }
 
-function showLoadingModal() {
-  document.getElementById("loadingModal").style.display = "block";
-}
-
-function hideLoadingModal() {
-  document.getElementById("loadingModal").style.display = "none";
-}
-
 let filteredProducts = []; // Menyimpan produk yang sudah difilter
 const maxProductsToShow = 9; // Jumlah maksimum produk yang ingin ditampilkan
 
@@ -218,11 +210,15 @@ async function searchProducts() {
     }
     const data = await response.json();
 
-    // Filter produk berdasarkan nama produk jika searchTerm tidak kosong
+    // Filter produk berdasarkan nama produk, productcode, atau discount jika searchTerm tidak kosong
     if (searchTerm !== "") {
-      filteredProducts = data.products.filter((product) =>
-        product.product.toLowerCase().includes(searchTerm)
-      );
+      filteredProducts = data.products.filter((product) => {
+        return (
+          product.product.toLowerCase().includes(searchTerm) ||
+          product.productcode.toLowerCase().includes(searchTerm) ||
+          product.discount.toString().includes(searchTerm)
+        );
+      });
     } else {
       // Jika searchTerm kosong, ambil sejumlah produk maksimum untuk ditampilkan
       filteredProducts = data.products.slice(0, maxProductsToShow);
@@ -272,10 +268,6 @@ async function fetchProductCount() {
     console.error("Error fetching product count:", error);
     return 0;
   }
-}
-
-function showSuccessModal() {
-  $("#successModal").modal("show");
 }
 
 const addDataBtn = document
@@ -465,9 +457,6 @@ async function addNewProduct(formData) {
       throw new Error("Failed to add new product");
     }
 
-    // Tampilkan modal loading (jika diperlukan)
-    // showLoadingModal();
-
     let timerInterval;
     Swal.fire({
       icon: "info",
@@ -508,10 +497,6 @@ async function addNewProduct(formData) {
     Swal.fire("Error", "Gagal menambahkan produk. Silakan coba lagi.", "error");
   }
 }
-
-$("#successModal").on("hidden.bs.modal", function () {
-  handleSuccessModalHidden();
-});
 
 let currentProduct = null; // Inisialisasi currentProduct dengan null
 
@@ -657,9 +642,6 @@ async function updateProduct(formData) {
       throw new Error("Product data is invalid");
     }
 
-    // Tampilkan modal loading (jika diperlukan)
-    // showLoadingModal();
-
     // URL untuk update produk (ganti dengan URL dan method PUT yang sesuai)
     const updateUrl = `https://newapi.katib.id/data/product/${currentProduct.product_id}`;
 
@@ -712,9 +694,6 @@ async function updateProduct(formData) {
 
     // Fetch ulang produk setelah update berhasil
     fetchProducts();
-
-    // Menutup modal update (jika diperlukan)
-    $("#updateModal").modal("hide");
   } catch (error) {
     console.error("Error updating product:", error);
     // Menampilkan pesan error kepada pengguna (jika diperlukan)
@@ -739,11 +718,6 @@ function showDeleteModal(productId) {
     }
   });
 }
-
-function showSuccessModalDelete() {
-  $("#successModalDelete").modal("show");
-}
-
 async function deleteProduct(productId) {
   const deleteUrl = `https://newapi.katib.id/data/product/delete/${productId}`;
 
@@ -799,16 +773,6 @@ async function deleteProduct(productId) {
       }
     });
 
-    // Panggil modal keberhasilan
-    // showSuccessModalDelete();
-
-    // Sembunyikan modal loading setelah penghapusan berhasil
-    // hideLoadingModal();
-
-    // setTimeout(() => {
-    // }, 8000);
-
-    // Refresh daftar produk setelah penghapusan berhasil
     fetchProducts();
 
     // Reload halaman setelah 4 detik
